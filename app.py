@@ -112,6 +112,8 @@ components.html(
           const ctx = canvas.getContext("2d");
           const width = canvas.width;
           const height = canvas.height;
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          let audioContext = null;
 
           const config = {{
             baseSpeed: {speed},
@@ -148,6 +150,65 @@ components.html(
           let particles = [];
           let obstacles = [];
           let groundOffset = 0;
+          let lastMilestone = 0;
+
+          function ensureAudio() {{
+            if (!AudioCtx) {{
+              return null;
+            }}
+
+            if (!audioContext) {{
+              audioContext = new AudioCtx();
+            }}
+
+            if (audioContext.state === "suspended") {{
+              audioContext.resume();
+            }}
+
+            return audioContext;
+          }}
+
+          function playTone(frequency, duration, type, volume, glideTo = null) {{
+            const ac = ensureAudio();
+            if (!ac) {{
+              return;
+            }}
+
+            const now = ac.currentTime;
+            const oscillator = ac.createOscillator();
+            const gain = ac.createGain();
+
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(frequency, now);
+            if (glideTo !== null) {{
+              oscillator.frequency.exponentialRampToValueAtTime(glideTo, now + duration);
+            }}
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+            oscillator.connect(gain);
+            gain.connect(ac.destination);
+            oscillator.start(now);
+            oscillator.stop(now + duration);
+          }}
+
+          function playJumpSound() {{
+            playTone(420, 0.12, "square", 0.03, 620);
+          }}
+
+          function playHitSound() {{
+            playTone(180, 0.22, "sawtooth", 0.05, 90);
+          }}
+
+          function playStartSound() {{
+            playTone(320, 0.08, "triangle", 0.025, 420);
+          }}
+
+          function playScoreSound() {{
+            playTone(740, 0.08, "square", 0.02, 860);
+          }}
 
           function resetGame() {{
             player.y = groundY - player.height;
@@ -163,21 +224,25 @@ components.html(
             particles = [];
             obstacles = [];
             groundOffset = 0;
+            lastMilestone = 0;
           }}
 
           function jump() {{
             if (gameOver) {{
+              playStartSound();
               resetGame();
               return;
             }}
 
             if (!gameStarted) {{
               gameStarted = true;
+              playStartSound();
             }}
 
             if (player.grounded) {{
               player.velocityY = -config.jumpPower;
               player.grounded = false;
+              playJumpSound();
             }}
           }}
 
@@ -219,6 +284,12 @@ components.html(
               speedNow += 0.0009;
               obstacleTimer -= 1;
               groundOffset = (groundOffset + speedNow) % width;
+
+              const milestone = Math.floor(score / 100);
+              if (milestone > lastMilestone) {{
+                lastMilestone = milestone;
+                playScoreSound();
+              }}
 
               if (obstacleTimer <= 0) {{
                 spawnObstacle();
@@ -263,6 +334,7 @@ components.html(
               if (hit) {{
                 gameOver = true;
                 bestScore = Math.max(bestScore, Math.floor(score));
+                playHitSound();
                 break;
               }}
             }}
@@ -414,6 +486,7 @@ components.html(
             }}
 
             if (event.key.toLowerCase() === "r" && gameOver) {{
+              playStartSound();
               resetGame();
             }}
           }});
