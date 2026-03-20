@@ -76,8 +76,8 @@ def image_to_data_url(uploaded_file) -> str | None:
     return f"data:{uploaded_file.type};base64,{encoded}"
 
 
-st.title("Dino Runner")
-st.caption("Game sederhana ala Chrome Dino, dibuat dengan Python + Streamlit.")
+st.title("Mudkip Runner")
+
 
 with st.sidebar:
     st.header("Pengaturan")
