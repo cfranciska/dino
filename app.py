@@ -104,7 +104,7 @@ components.html(
     dedent(
         f"""
         <div id="game-shell">
-          <canvas id="game" width="920" height="320"></canvas>
+          <canvas id="game" width="640" height="640"></canvas>
         </div>
 
         <script>
@@ -129,12 +129,12 @@ components.html(
             characterImage.src = characterImageSrc;
           }}
 
-          const groundY = height - 56;
+          const groundY = height - 168;
           const player = {{
-            x: 90,
-            y: groundY - 54,
-            width: 54,
-            height: 54,
+            x: 84,
+            y: groundY - 92,
+            width: 92,
+            height: 92,
             velocityY: 0,
             grounded: true,
             rotation: 0,
@@ -248,8 +248,8 @@ components.html(
 
           function spawnObstacle() {{
             const tall = Math.random() > 0.65;
-            const widthVar = tall ? 26 : 34 + Math.random() * 18;
-            const heightVar = tall ? 58 + Math.random() * 26 : 28 + Math.random() * 16;
+            const widthVar = tall ? 32 : 42 + Math.random() * 20;
+            const heightVar = tall ? 72 + Math.random() * 34 : 34 + Math.random() * 20;
             obstacles.push({{
               x: width + 24,
               y: groundY - heightVar,
@@ -342,40 +342,115 @@ components.html(
 
           function drawBackground() {{
             const sky = ctx.createLinearGradient(0, 0, 0, height);
-            sky.addColorStop(0, "#fff7db");
-            sky.addColorStop(1, "#f0c27b");
+            sky.addColorStop(0, "#f7f4ea");
+            sky.addColorStop(0.45, "#f7d9a6");
+            sky.addColorStop(1, "#b98052");
             ctx.fillStyle = sky;
             ctx.fillRect(0, 0, width, height);
 
-            ctx.fillStyle = "rgba(255,255,255,0.45)";
-            ctx.beginPath();
-            ctx.arc(120, 70, 28, 0, Math.PI * 2);
-            ctx.arc(150, 65, 22, 0, Math.PI * 2);
-            ctx.arc(177, 72, 18, 0, Math.PI * 2);
-            ctx.fill();
+            const cloudColor = "rgba(255,255,255,0.62)";
+            function drawCloud(x, y, scale) {{
+              ctx.fillStyle = cloudColor;
+              ctx.beginPath();
+              ctx.arc(x, y, 18 * scale, 0, Math.PI * 2);
+              ctx.arc(x + 22 * scale, y - 8 * scale, 24 * scale, 0, Math.PI * 2);
+              ctx.arc(x + 48 * scale, y - 2 * scale, 20 * scale, 0, Math.PI * 2);
+              ctx.arc(x + 68 * scale, y + 6 * scale, 15 * scale, 0, Math.PI * 2);
+              ctx.fill();
+            }}
 
+            drawCloud(68, 78, 1.2);
+            drawCloud(370, 102, 1.45);
+            drawCloud(452, 60, 0.95);
+
+            ctx.fillStyle = "rgba(140, 95, 59, 0.16)";
             ctx.beginPath();
-            ctx.arc(670, 82, 32, 0, Math.PI * 2);
-            ctx.arc(705, 76, 25, 0, Math.PI * 2);
-            ctx.arc(738, 84, 20, 0, Math.PI * 2);
+            ctx.moveTo(0, groundY - 70);
+            ctx.quadraticCurveTo(120, groundY - 118, 240, groundY - 80);
+            ctx.quadraticCurveTo(360, groundY - 46, 520, groundY - 96);
+            ctx.quadraticCurveTo(590, groundY - 118, width, groundY - 76);
+            ctx.lineTo(width, groundY);
+            ctx.lineTo(0, groundY);
+            ctx.closePath();
             ctx.fill();
           }}
 
           function drawGround() {{
-            ctx.fillStyle = "#d7a86e";
+            ctx.fillStyle = "#d2a06d";
             ctx.fillRect(0, groundY, width, height - groundY);
             ctx.fillStyle = "#6f4e37";
             ctx.fillRect(0, groundY, width, 4);
 
+            ctx.fillStyle = "#b17f52";
+            ctx.fillRect(0, groundY + 72, width, height - groundY - 72);
+
+            function drawFossil(x, y, scale) {{
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.scale(scale, scale);
+              ctx.strokeStyle = "rgba(239, 221, 183, 0.72)";
+              ctx.lineWidth = 4;
+              ctx.lineCap = "round";
+              ctx.lineJoin = "round";
+
+              ctx.beginPath();
+              ctx.arc(0, 0, 18, 0.35, Math.PI * 1.65);
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(10, -4);
+              ctx.lineTo(42, -4);
+              ctx.moveTo(16, 10);
+              ctx.lineTo(42, 10);
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.moveTo(28, -4);
+              ctx.lineTo(24, -18);
+              ctx.moveTo(38, -4);
+              ctx.lineTo(36, -17);
+              ctx.moveTo(28, 10);
+              ctx.lineTo(24, 24);
+              ctx.moveTo(38, 10);
+              ctx.lineTo(35, 23);
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.arc(-24, -2, 8, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.restore();
+            }}
+
+            function drawFootprint(x, y, scale) {{
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.scale(scale, scale);
+              ctx.fillStyle = "rgba(239, 221, 183, 0.55)";
+              ctx.beginPath();
+              ctx.ellipse(0, 0, 13, 9, -0.2, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.beginPath();
+              ctx.arc(9, -10, 4, 0, Math.PI * 2);
+              ctx.arc(2, -13, 4, 0, Math.PI * 2);
+              ctx.arc(-5, -11, 4, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
+            }}
+
             ctx.strokeStyle = "rgba(111,78,55,0.45)";
             ctx.lineWidth = 2;
-            for (let i = -1; i < 12; i++) {{
-              const x = i * 90 - groundOffset;
+            for (let i = -1; i < 10; i++) {{
+              const x = i * 84 - groundOffset;
               ctx.beginPath();
               ctx.moveTo(x, groundY + 14);
               ctx.lineTo(x + 42, groundY + 14);
               ctx.stroke();
             }}
+
+            drawFossil(108, groundY + 116, 1.05);
+            drawFossil(358, groundY + 128, 0.9);
+            drawFootprint(258, groundY + 98, 1.1);
+            drawFootprint(530, groundY + 114, 0.95);
           }}
 
           function drawPlayer() {{
@@ -443,24 +518,24 @@ components.html(
 
             if (!gameStarted && !gameOver) {{
               ctx.fillStyle = "rgba(47, 42, 31, 0.84)";
-              ctx.font = "bold 26px Arial";
-              ctx.fillText("Klik atau tekan Space untuk mulai", 220, 120);
+              ctx.font = "bold 24px Arial";
+              ctx.fillText("Klik atau tekan Space untuk mulai", 120, 118);
             }}
 
             if (gameOver) {{
               ctx.fillStyle = "rgba(0,0,0,0.22)";
               ctx.fillRect(0, 0, width, height);
               ctx.fillStyle = "#fffaf0";
-              ctx.fillRect(width / 2 - 185, 82, 370, 118);
+              ctx.fillRect(width / 2 - 185, 152, 370, 118);
               ctx.strokeStyle = "#6f4e37";
               ctx.lineWidth = 3;
-              ctx.strokeRect(width / 2 - 185, 82, 370, 118);
+              ctx.strokeRect(width / 2 - 185, 152, 370, 118);
               ctx.fillStyle = "#3d2a17";
               ctx.font = "bold 28px Arial";
-              ctx.fillText("Game Over", width / 2 - 76, 122);
+              ctx.fillText("Game Over", width / 2 - 76, 192);
               ctx.font = "20px Arial";
-              ctx.fillText(`Skor akhir: ${{Math.floor(score)}}`, width / 2 - 72, 152);
-              ctx.fillText("Tekan R atau Space untuk ulang", width / 2 - 128, 180);
+              ctx.fillText(`Skor akhir: ${{Math.floor(score)}}`, width / 2 - 72, 222);
+              ctx.fillText("Tekan R atau Space untuk ulang", width / 2 - 128, 250);
             }}
           }}
 
@@ -514,7 +589,8 @@ components.html(
 
           canvas {{
             width: 100%;
-            max-width: 920px;
+            max-width: 640px;
+            aspect-ratio: 1 / 1;
             border-radius: 18px;
             border: 3px solid #6f4e37;
             box-shadow: 0 18px 40px rgba(111, 78, 55, 0.18);
@@ -523,7 +599,7 @@ components.html(
         </style>
         """
     ),
-    height=340,
+    height=660,
 )
 
 st.info(
